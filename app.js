@@ -46,7 +46,7 @@ app.post("/telas", async (req, res) => {
             }
             res.json(updatedItem);
         } catch (err) {
-            res.status(400).json({ message: err.message });
+            res.status(400).json({ message: err.message });  
         }
     } else{
   const newItem = new Tela({
