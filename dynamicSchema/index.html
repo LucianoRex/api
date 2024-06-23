@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Schema</title>
+</head>
+<body>
+    <script>
+        async function createSchema() {
+            const schemaData = {
+                schemaName: "MeuSchemaDinamico",
+                fields: [
+                    { name: "nome", type: "String" },
+                    { name: "idade", type: "Number" },
+                    { name: "email", type: "String" }
+                ]
+            };
+
+            try {
+                const response = await fetch('http://localhost:3000/create-schema', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(schemaData)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('Schema created successfully:', result);
+                } else {
+                    console.error('Error creating schema:', response.statusText);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        createSchema();
+    </script>
+</body>
+</html>
