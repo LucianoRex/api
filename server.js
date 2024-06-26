@@ -33,7 +33,8 @@ const dynamicSchemaSchema = new mongoose.Schema({
     schemaName: { type: String, required: true, unique: true },
     fields: [{
         name: { type: String, required: true },
-        type: { type: String, required: true }
+        type: { type: String, required: true },
+        alias: { type: String, required: true } // Novo campo alias
     }]
 });
 
@@ -45,6 +46,7 @@ const schemaValidation = [
     body('fields').isArray().notEmpty(),
     body('fields.*.name').isString().notEmpty(),
     body('fields.*.type').isString().isIn(['String', 'Number', 'Date', 'Boolean', 'Array', 'Buffer', 'Mixed', 'ObjectId', 'Decimal128', 'Map']),
+    body('fields.*.alias').isString().notEmpty() // Validação para o campo alias
 ];
 
 // Endpoint para criar ou editar schemas dinamicamente e armazená-los no banco de dados
@@ -80,7 +82,7 @@ const typeMapping = {
     'String': String,
     'Number': Number,
     'Date': Date,
-    'Boolean': Boolean,
+    'Boolean': Boolean, 
     'Array': Array,
     'Buffer': Buffer,
     'Mixed': mongoose.Schema.Types.Mixed,
@@ -102,11 +104,11 @@ const getDynamicModel = async (schemaName) => {
         if (!mongooseType) {
             throw new Error(`Invalid type for field ${field.name}: ${field.type}`);
         }
-        schemaDefinition[field.name] = { type: mongooseType };
+        schemaDefinition[field.name] = { type: mongooseType, alias: field.alias };
     });
 
     const dynamicSchema = new mongoose.Schema(schemaDefinition);
-
+    
     if (mongoose.models[schemaName]) {
         delete mongoose.models[schemaName];
     }
@@ -136,7 +138,20 @@ app.get('/documents/:schemaName', async (req, res) => {
     try {
         const DynamicModel = await getDynamicModel(schemaName);
         const documents = await DynamicModel.find(query); // Usa os parâmetros diretamente na consulta
-        res.status(200).json(documents);
+
+        // Obtenha o schema dinâmico para extrair os aliases
+        const schemaRecord = await DynamicSchemaModel.findOne({ schemaName });
+        if (!schemaRecord) {
+            return res.status(404).send(`Schema ${schemaName} not found`);
+        }
+
+        // Mapeie os campos para seus aliases
+        const fieldAliases = schemaRecord.fields.reduce((acc, field) => {
+            acc[field.name] = field.alias;
+            return acc;
+        }, {});
+
+        res.status(200).json({ documents, fieldAliases });
     } catch (error) {
         res.status(400).send(error.message);
     }

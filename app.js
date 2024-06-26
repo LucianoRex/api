@@ -19,32 +19,72 @@ db.once("open", () => {
 });
 
 // Esquema MongoDB
-const view = new mongoose.Schema({
+const menu = new mongoose.Schema({
   nome: String,
   caminho: String,
   tipo: String,
-  html: String,
-  css: String,
-  js: String,
-  fields:Array
-});
-const View = mongoose.model("View", view);
+  schema:String
+  //html: String,
+  //css: String,
+  //js: String,
+  //fields: Array,
+  //campos: Array
+},
+  {
+    collection: 'menu'
+  });
+const Menu = mongoose.model("Menu", menu);
+
+const aluno = new mongoose.Schema({
+  nome: { type: String, alias: 'Nome completo' },
+  idade: { type: String, alias: 'Idade' },
+  sexo: { type: String, alias: 'Sexo' },
+})
+
+const Aluno = new mongoose.model('Aluno', aluno)
+
+
+const professor = new mongoose.Schema({
+  nome: { type: String, alias: 'Nome completo' },
+  idade: { type: String, alias: 'Idades' }
+
+})
+
+const Professor = new mongoose.model('Professor', professor)
 
 app.use(cors());
 // Middleware para análise de corpo JSON
 app.use(express.json());
 
-mongoose.pluralize(null)
+//mongoose.pluralize(null)
+
+
+
+
+
+app.get('/professor', async (req, res) => {
+  console.log('aluno')
+  try {
+    const professor = await Professor.find();
+    console.log(professor)
+    res.send(professor)
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+
+})
+
+
 
 // Endpoint para criar um novo item
-app.post("/view", async (req, res) => {
+app.post("/menu", async (req, res) => {
   console.log(req.body);
-  const { _id, nome, caminho, tipo, html, css, js,fields } = req.body;
+  const { _id, nome, caminho, tipo, schema } = req.body;
 
   if (_id) {
     // Atualizar item existente
     try {
-      const updatedItem = await View.findByIdAndUpdate(_id, { nome, caminho, tipo, html, css, js,fields }, { new: true, runValidators: true });
+      const updatedItem = await Menu.findByIdAndUpdate(_id, { nome, caminho, tipo,schema }, { new: true, runValidators: true });
       if (!updatedItem) {
         return res.status(404).json({ message: 'Item não encontrado' });
       }
@@ -53,53 +93,103 @@ app.post("/view", async (req, res) => {
       res.status(400).json({ message: err.message });
     }
   } else {
-    const newView = new View({
+    const newMenu = new Menu({
       // _id:req.body._id,
       nome: nome,
       caminho: caminho,
       tipo: tipo,
-      html: html,
-      css: css,
-      js: js,
-      fields:fields
+       schema:schema
+      // html: html,
+      // css: css,
+      // js: js,
+      // fields: fields
     });
     try {
-      await newView.save();
-      res.status(201).json(newView);
+      await newMenu.save();
+      res.status(201).json(newMenu);
     } catch (err) {
       res.status(400).json({ message: err.message });
     }
   }
 });
 
+
 // Endpoint para buscar todos os itens
-app.get("/view", async (req, res) => {
+app.get("/menu", async (req, res) => {
   try {
-    const view = await View.find();
-    res.send(view)
+    const menu = await Menu.find();
+    console.log(menu)
+    res.send(menu)
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
 
-app.get("/lista-view", async (req, res) => {
+app.get("/lista-menu", async (req, res) => {
   try {
-    const view = await View.find(/*{},{caminho:1,title:1}*/);
-    res.json(view)
+    const menu = await Menu.find(/*{},{caminho:1,title:1}*/);
+    console.log(menu)
+    res.json(menu)
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 })
 
-app.get("/carrega-view/:_id", async (req, res) => {
+app.get("/carrega-menu/:_id", async (req, res) => {
   try {
-    const view = await View.findById(req.params._id);
-    res.json(view)
+    const menu = await Menu.findById(req.params._id);
+    console.log(menu)
+    res.json(menu)
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 })
 
+app.get('/aluno', async (req, res) => {
+  console.log('aluno')
+  try {
+    const aluno1 = await Aluno.find({idade:{$gt:25}});
+    const campos = Object.keys(aluno.paths).filter(campo => campo !== '__v')
+      .map(campo => ({
+        campo,
+        alias: aluno.paths[campo].options.alias || campo
+      }));
+    //console.log(aluno.paths)
+    console.log(campos);
+    res.send(aluno1);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+
+})
+
+
+app.get("/aluno/:_id", async (req, res) => {
+  try {
+    const aluno = await Aluno.findById(req.params._id);
+    console.log(aluno)
+    res.json(aluno)
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+})
+app.get('/campo-aluno', async (req, res) => {
+  console.log('aluno')
+  try {
+   // const aluno1 = await Aluno.find();
+    const campos = Object.keys(aluno.paths).filter(campo => campo !== '__v')
+      .map(campo => ({
+        campo,
+        alias: aluno.paths[campo].options.alias || campo
+      }));
+    //console.log(aluno.paths)
+    console.log(campos);
+    res.send(campos)
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+
+})
 
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
