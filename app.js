@@ -36,9 +36,16 @@ const menu = new mongoose.Schema({
 const Menu = mongoose.model("Menu", menu);
 
 const aluno = new mongoose.Schema({
-  nome: { type: String, alias: 'Nome completo' },
-  idade: { type: String, alias: 'Idade' },
-  sexo: { type: String, alias: 'Sexo' },
+  nome: { type: String, alias: 'Nome completo'},
+  idade: { type: String, alias: 'Idade' ,options:[1,2,3]},
+  sexo: { type: String, alias: 'Sexo',options:[1,2,3] },
+  genero: { type: String, alias: 'Genero'},
+  cpf: { type: String, alias: 'CPF'},
+  nomeMae: { type: String, alias: 'Nome da mae',options:[1,2,3] },
+  dataNasc: { type: Date, alias: 'Data de nascimento'},
+  mensagem: { type: String, alias: 'Mensagem'},
+}, {
+  collection: 'aluno'
 })
 
 const Aluno = new mongoose.model('Aluno', aluno)
@@ -148,14 +155,14 @@ app.get("/carrega-menu/:_id", async (req, res) => {
 app.get('/aluno', async (req, res) => {
   console.log('aluno')
   try {
-    const aluno1 = await Aluno.find({idade:{$gt:25}});
+    const aluno1 = await Aluno.find(/*{idade:{$lt:25}}*/);
     const campos = Object.keys(aluno.paths).filter(campo => campo !== '__v')
       .map(campo => ({
         campo,
         alias: aluno.paths[campo].options.alias || campo
       }));
     //console.log(aluno.paths)
-    console.log(campos);
+    console.log(aluno1);
     res.send(aluno1);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -178,12 +185,19 @@ app.get('/campo-aluno', async (req, res) => {
   try {
    // const aluno1 = await Aluno.find();
     const campos = Object.keys(aluno.paths).filter(campo => campo !== '__v')
-      .map(campo => ({
+      .map(campo => (
+        
+        {
+        
         campo,
-        alias: aluno.paths[campo].options.alias || campo
+        alias: aluno.paths[campo].options.alias || campo,
+        a:aluno.paths[campo].options,
+        b:aluno.paths[campo].instance
       }));
+
+      
     //console.log(aluno.paths)
-    console.log(campos);
+    //console.log(campos2);
     res.send(campos)
   } catch (err) {
     res.status(500).json({ message: err.message });
